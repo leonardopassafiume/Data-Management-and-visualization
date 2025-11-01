@@ -61,3 +61,37 @@ GROUP BY PHONERATETYPE, DATEMONTH
 
 #EXERCISE 7
 
+SELECT Region, Province,
+	SUM(SUM(NumberOfCalls)) OVER (PARTITION BY Region)/COUNT(DISTINCT DayDate) AS Daily_Region_Calls,
+	SUM(NumberOfCalls)/COUNT(DISTINCT DayDate) AS Daily_Province_Calls
+FROM Facts F, TimeDim T, Location L
+WHERE F.Id_time = T.Id_time
+AND F.id_location_caller = L.id_location
+GROUP BY Region, Province
+
+# exercise 8
+
+SELECT PhoneRateType, DateMonth, SUM(price), 
+    (SUM(price)/SUM(SUM(price)) OVER (PARTITION BY DateMonth)) * 100 AS PercOfRatePerMonth,
+    (SUM(price)/SUM(SUM(price)) OVER (PARTITION BY PhoneRateType)) * 100 AS PercOfMonthPerRate 
+FROM Facts F, TimeDim T, PhoneRate P
+WHERE F.Id_time = T.Id_time AND P.ID_PhoneRate = F.ID_PhoneRate AND DateYear = '2003'
+GROUP BY PhoneRateType, DateMonth
+
+# EXERCISE 9
+
+SELECT Region, Province, SUM(NumberOfCalls),
+    SUM(NumberOfCalls)/SUM(SUM(NumberOfCalls)) OVER (PARTITION BY Region) * 100
+FROM Facts F, Location L
+WHERE F.ID_Location_Caller = L.ID_Location
+GROUP BY Region, Province
+
+# EXERCISE 10
+
+SELECT DateYear, DateMonth, SUM(NumberOfCalls) AS TotCalls,
+    SUM(NumberOfCalls)/COUNT(DISTINCT DateMonth) AS Monthly_Calls,
+    SUM(SUM(NumberOfCalls)) OVER (PARTITION BY DateYear, Region
+    							  ORDER BY DateMonth ROWS UNBOUNDED PRECEDING) AS CumSum
+FROM Facts F, TimeDim T, Location L
+WHERE F.Id_time = T.Id_time AND F.ID_Location_Receiver = L.ID_Location
+GROUP BY DateMonth, DateYear, Region
